@@ -1,0 +1,8 @@
+# we don't need these
+
+.vscode/
+
+node_modules/
+
+/__pycache__/
+
