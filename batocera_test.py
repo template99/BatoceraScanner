@@ -1,10 +1,6 @@
 import unittest
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.by import By
 import requests
 import time
-import json
 
 # See REST Api list on https://github.com/batocera-linux/batocera-emulationstation/blob/master/es-app/src/services/HttpServerThread.cpp#L25
 #
@@ -29,12 +25,13 @@ import json
 #
 hostSite = "http://minicab:1234"
 outFile = "C:\\temp\\batotestlog.txt"
-mySystem = 'a2600'
-#AUT = 'minicab'
-AUT = 'hp'
+mySystem = 'atari2600'
+AUT = '192.168.101.162'
+#AUT = 'hp'
+ignoredSystems = ['all','screenshots','favorites']
 platforms = []
-delayBetweenGames = 3
-delayDuringGame =3
+delayBetweenGames = 9
+delayDuringGame = 9 
 
 
 class BatoceraTest(unittest.TestCase):
@@ -52,12 +49,14 @@ class BatoceraTest(unittest.TestCase):
         # self.assert_(1==1)
         
 
-        
+    def is_emulator_running(self):
+        rq = requests.get("http://"+AUT+":1234/runningGame")
+        return str(rq.text) 
 
     def test_list_systems(self):
         print('listing systems...')
-        rq = requests.get('http://'+AUT+':1234/systems')            
-        json = rq.json()
+        request = requests.get('http://'+AUT+':1234/systems')            
+        json = request.json()
         print('>>total systems: '+str(len(json)))
         for x in json:
             print(" > " + x["name"])
@@ -68,28 +67,65 @@ class BatoceraTest(unittest.TestCase):
 
     def closeEmulator(self):
         print("** shutting down emulator **")
-        requests.post('http://'+AUT+':1234/emukill')
+        requests.get('http://'+AUT+':1234/emukill')
         
-    def test_atari_games(self):
+    def test_list_atari_games(self):
+        gamelist = []  # games to run
         print('starting Atari 2600 games')
-        thisPlatform = 'a2600'
+        thisPlatform = 'atari2600'
         print("getting games for platform " + thisPlatform)
-        rq = requests.get('http://'+AUT+':1234/systems/"+thisPlatform)')         
+        rq = requests.get('http://hp:1234/systems/atari2600/games')         
         json = rq.json()
         print('>>total games: '+str(len(json)))
         for x in json:
-            print(" > " + x["name"])
-            platforms.append(x["name"]) # add to list
+            print(" > " + x["path"])
+            gamelist.append(x["path"]) # add to list
         print(" ")
 
+    def get_games_for_platform(self,platform):
+        theGames = []
+        rq = requests.get('http://hp:1234/systems/atari2600/games')         
+        json = rq.json()
+        print('>>total games: '+str(len(json)))
+        for thisGame in json:
+            print(" > " + thisGame["path"])
+            theGames.append(thisGame["path"]) # add to list
+        return theGames
+    
+    def test_atari_run(self):
+        self.closeEmulator()
+        theGames = self.get_games_for_platform("atari2600")
+        for thisGame in theGames:
+            print('running game > ' + thisGame)
+            rq = requests.post('http://hp:1234/launch/',thisGame)
+            time.sleep(delayDuringGame)
+            print("is ok? "  + str(rq.ok))
+            # TODO: check here
+            runGame = requests.request('http://hp:1234/runningame')
+
+            self.closeEmulator()
+            time.sleep(delayBetweenGames)
 
 
 
 
-    # //div[@id='systemList']  -- gets you the systems
-    def get_systems(self):
-        print("getting systems")
-        zopz = self.driver.find_elements(By.XPATH,"") 
+
+    # function launchGame(game) {
+    # 	var xhr = new XMLHttpRequest();
+    # 	xhr.open('POST', '/launch');
+    # 	xhr.send(game);
+    # }
+    def test_run_one_game(self):
+        print('running one game, and shutting down')
+        rq = requests.post('http://hp:1234/launch',"/userdata/roms/atari2600/Berzerk.bin")
+        time.sleep(delayDuringGame)
+        print("is ok? "  + str(rq.ok))
+        print(self.is_emulator_running())
+        self.closeEmulator()
+
+    def test_close_enulator(self):
+        self.closeEmulator()
+
 
     def tearDown(self):
         print('done')
