@@ -23,8 +23,6 @@ import constants
 # POST /systems/{systemName}/games/{gameId}/media/{mediaType}		-> body must contain the file bytes to save. Content-type must be valid.
 
 # port 1234 for all API calls
-#
-hostSite = "http://minicab:1234"
 outFile = "C:\\temp\\batotestlog.txt"
 mySystem = 'atari2600'
 #AUT = '192.168.101.162'
@@ -33,8 +31,8 @@ AUT = 'basement'
 #AUT = 'hp'
 ignoredSystems = ['all','screenshots','favorites']
 platforms = []
-delayBetweenGames = 19
-delayDuringGame = 19 
+delayBetweenGames = 13
+delayDuringGame = 5
 passedGames = []
 failedGames = []
 
@@ -55,12 +53,22 @@ class BatoceraTest(unittest.TestCase):
         self.assertEqual(rq.ok, True)
 
         
+    def test_isRUnningGame(self):
+        self.closeEmulator()
+        thisGame = '/userdata/roms/atari2600/Xevious.bin'
+        print('simple test for running game')
+        rq = requests.post('http://' + constants.AUT + ':1234/launch/',thisGame)
+        time.sleep(delayDuringGame)
+        print(self.is_emulator_running())
 
     # flesh this out, true or false
     # 
     def is_emulator_running(self):
         rq = requests.get("http://"+constants.AUT+":1234/runningGame")
-        return str(rq.text) 
+        if '200 NO GAME' in rq.text:
+            return False
+        else:
+            return True 
 
     def test_list_systems(self):
         print('listing systems...')
@@ -76,22 +84,23 @@ class BatoceraTest(unittest.TestCase):
     def closeEmulator(self):
         print("** shutting down emulator **")
         rq = requests.get('http://'+constants.AUT+':1234/emukill')
-        print(str(rq.status_code))
+        print('kill response: ' + str(rq.status_code))
 
 
         
     def test_list_atari_games(self):
         gamelist = []  # games to run
-        print('starting Atari 2600 games')
         thisPlatform = 'atari2600'
+        print('starting Atari 2600 games')        
         print("getting games for platform " + thisPlatform)
         rq = requests.get('http://'+constants.AUT+':1234/systems/atari2600/games')         
         json = rq.json()
         print('>>total games: '+str(len(json)))
         for x in json:
-            print(" > " + x["path"])
+            print("game > " + x["path"])
             gamelist.append(x["path"]) # add to list
         print(" ")
+
 
     def get_games_for_platform(self,platform):
         theGames = []
@@ -107,16 +116,19 @@ class BatoceraTest(unittest.TestCase):
     # 
     def test_atari_run_games(self):
         self.closeEmulator()
+        time.sleep(delayBetweenGames)
         theGames = self.get_games_for_platform("atari2600")
         for thisGame in theGames:
-            print('starting game > ' + thisGame)
+            print('>starting game > ' + thisGame)
             rq = requests.post('http://' + constants.AUT + ':1234/launch/',thisGame)
             time.sleep(delayDuringGame)
-            if rq.ok == True:
+            if self.is_emulator_running() == True:
+            #if rq.ok == True:
                 passedGames.append(thisGame)
-                runGame = requests.get('http://' + constants.AUT + ':1234/runningame')                
+                currentlyRunningGame = requests.get('http://' + constants.AUT + ':1234/runningame')    
+                print(currentlyRunningGame.text[2])            
             else:
-                print(">Game " + thisGame +  " failed to launch " + rq.ok)
+                print(">Game " + thisGame +  " failed to launch " + str(rq.ok))
                 failedGames.append(thisGame)
             self.closeEmulator()
             time.sleep(delayBetweenGames)
