@@ -84,7 +84,7 @@ class BatoceraTest(unittest.TestCase):
     def closeEmulator(self):
         print("** shutting down emulator **")
         rq = requests.get('http://'+constants.AUT+':1234/emukill')
-        print('kill response: ' + str(rq.status_code))
+        #print('kill response: ' + str(rq.status_code))
 
 
         
@@ -115,15 +115,16 @@ class BatoceraTest(unittest.TestCase):
     # launches each game, sees if it runs
     # 
     def test_atari_run_games(self):
+        myPlatform = 'atari2600'
         self.closeEmulator()
+        marker = 0; 
         time.sleep(delayBetweenGames)
-        theGames = self.get_games_for_platform("atari2600")
+        theGames = self.get_games_for_platform(myPlatform)
         for thisGame in theGames:
-            print('>starting game > ' + thisGame)
+            print('(' + marker + '/' + theGames.count +') >starting game > ' + thisGame)
             rq = requests.post('http://' + constants.AUT + ':1234/launch/',thisGame)
             time.sleep(delayDuringGame)
             if self.is_emulator_running() == True:
-            #if rq.ok == True:
                 passedGames.append(thisGame)
                 currentlyRunningGame = requests.get('http://' + constants.AUT + ':1234/runningame')    
                 print(currentlyRunningGame.text[2])            
@@ -132,7 +133,12 @@ class BatoceraTest(unittest.TestCase):
                 failedGames.append(thisGame)
             self.closeEmulator()
             time.sleep(delayBetweenGames)
-
+            marker+=1
+        print("post-run report for system " + myPlatform )
+        print("****************")
+        print('total passed games:  ' + str(passedGames.count))
+        print('total failed games:  ' + str(failedGames.count))
+        print('')
 
 
 

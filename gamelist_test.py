@@ -29,7 +29,7 @@ class RunGameLists(unittest.TestCase):
         print("getting games for system " + thisPlatform)
         gamelist = []  # games to run
         print("getting games for platform " + thisPlatform)
-        rq = requests.get('http://hp:1234/systems/'+thisPlatform+'/games')         
+        rq = requests.get('http:/'+constants.AUT+':1234/systems/'+thisPlatform+'/games')         
         json = rq.json()
         print('>>total games: '+str(len(json)))
         for thisGame in json:
@@ -54,6 +54,8 @@ class RunGameLists(unittest.TestCase):
             gameList = self.getGamesPerSystem(thisPlatform)
             if len(gameList)>0:
                 print("running the games")
+                for thisGame in gameList:
+                    print('Run game:' + thisGame )
 
 
     def tearDown(self):
