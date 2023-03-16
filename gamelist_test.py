@@ -8,7 +8,7 @@ class RunGameLists(unittest.TestCase):
 
     def setUp(self):
         print("setup")
-        
+        # init log files here?         
 
 
 
@@ -60,6 +60,7 @@ class RunGameLists(unittest.TestCase):
 
     def tearDown(self):
         print(">teardown")
+        # close any files? 
 
 if __name__ == "__main__":
     print("running....")

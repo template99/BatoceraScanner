@@ -1,5 +1,5 @@
 import constants
-import glob, os
+import os
 import unittest
 
 
@@ -11,19 +11,16 @@ class SambaBatoceraTest(unittest.TestCase):
     def test_samba_dir(self):        
         x = os.listdir('\\\\' + constants.AUT + '\\share')
         for thisFile in x:
-            print(' > ' + thisFile)    # write a file on a distant Samba share
+            print(' > ' + thisFile)    # write a file on a Samba share
 
 
     def test_file_output(self):
         print('outputting text')
+        x = open(constants.logDir + "testlog.txt","w")
+        x.write("here's a test log writeout")
         
 
     def tearDown(self):
         print("teardown")
 
-    
-
-    # for f in glob.glob(r'\\USER1-PC\Users\**\*', recursive=True):
-    #     print(f)   # glob works too
-    #     if os.path.isfile(f):
-    #         print(os.path.getmtime(f))  # we can get filesystem information
+  
