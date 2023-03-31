@@ -121,13 +121,13 @@ class BatoceraTest(unittest.TestCase):
         time.sleep(delayBetweenGames)
         theGames = self.get_games_for_platform(myPlatform)
         for thisGame in theGames:
-            print('(' + marker + '/' + theGames.count +') >starting game > ' + thisGame)
+            print('(' + str(marker) + ') >starting game > ' + thisGame)
             rq = requests.post('http://' + constants.AUT + ':1234/launch/',thisGame)
             time.sleep(delayDuringGame)
             if self.is_emulator_running() == True:
                 passedGames.append(thisGame)
                 currentlyRunningGame = requests.get('http://' + constants.AUT + ':1234/runningame')    
-                print(currentlyRunningGame.text[2])            
+                print('running game: ' + currentlyRunningGame.text[1])            
             else:
                 print(">Game " + thisGame +  " failed to launch " + str(rq.ok))
                 failedGames.append(thisGame)
@@ -136,8 +136,8 @@ class BatoceraTest(unittest.TestCase):
             marker+=1
         print("post-run report for system " + myPlatform )
         print("****************")
-        print('total passed games:  ' + str(passedGames.count))
-        print('total failed games:  ' + str(failedGames.count))
+        print('total passed games:  ' + str(passedGames.count()))
+        print('total failed games:  ' + str(failedGames.count()))
         print('')
 
 
